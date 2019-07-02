@@ -20,6 +20,14 @@ func (e *ExpectedQuery) WillReturnRows(rows ...*Rows) *ExpectedQuery {
 	return e
 }
 
+func IsStruct(v interface{}) bool {
+	switch v.(type) {
+	case sql.Out:
+		return true
+	}
+	return false
+}
+
 func (e *queryBasedExpectation) argsMatches(args []namedValue) error {
 	if nil == e.args {
 		return nil
@@ -52,6 +60,10 @@ func (e *queryBasedExpectation) argsMatches(args []namedValue) error {
 		darg, err := e.converter.ConvertValue(dval)
 		if err != nil {
 			return fmt.Errorf("could not convert %d argument %T - %+v to driver value: %s", k, e.args[k], e.args[k], err)
+		}
+
+		if result := IsStruct(darg); result == true {
+			return nil
 		}
 
 		if !driver.IsValue(darg) {
